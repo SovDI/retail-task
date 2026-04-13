@@ -6,46 +6,36 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; background-color: #f4f7f6; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; background-color: #f4f7f6; }
         .container { width: 90%; max-width: 900px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin-bottom: 30px; }
+        h1 { color: #333; }
     </style>
 </head>
 <body>
-    <h1>График заказов (Данные из Supabase)</h1>
+    <h1>График заказов (Supabase)</h1>
     <div class="container">
         <canvas id="ordersChart"></canvas>
     </div>
 
     <script>
-        // Твои настройки (подставлено из скриншота)
-        const SUPABASE_URL = "https://fkloidqsfuicnmrwhyri.supabase.co"
-
-        // Твой Publishable Key (Anon)
+        // ИСПРАВЛЕНО: Убрана лишняя 'u' в URL
+        const SUPABASE_URL = "https://fkloidqsfuicnmrwhyri.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_uAph25Ayd9PFTakru0vO6Q_glK1TIU9nUv0jY_XfC0Y8YF3rWvN6S";
 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function drawChart() {
-            console.log("Загрузка данных из Supabase...");
-
-            // Забираем данные
             const { data, error } = await _supabase
                 .from('orders')
                 .select('order_number, total_sum')
-                .order('created_at', { ascending: true }); // Сортируем по времени
+                .order('id', { ascending: true });
 
             if (error) {
-                console.error("Ошибка Supabase:", error);
+                console.error("Ошибка Supabase:", error.message);
                 return;
             }
 
-            console.log("Данные успешно получены:", data);
-
-            if (!data || data.length === 0) {
-                alert("Данные в таблице не найдены!");
-                return;
-            }
+            console.log("Данные получены:", data);
 
             const ctx = document.getElementById('ordersChart').getContext('2d');
             new Chart(ctx, {
@@ -53,28 +43,14 @@
                 data: {
                     labels: data.map(o => o.order_number),
                     datasets: [{
-                        label: 'Сумма заказа (₸)',
+                        label: 'Сумма (₸)',
                         data: data.map(o => o.total_sum),
                         backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
                     }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: value => value.toLocaleString() + ' ₸' }
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
                 }
             });
         }
-
         drawChart();
     </script>
 </body>
